@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace BoardsInspection.Core.Entities
 {
-    internal class User
+    public class User
     {
+        public int Id { get; set; }
+
+        public string Email { get; set; } = null!;
+
+        public string Password { get; set; } = null!;
+
+        public int RoleId { get; set; }
     }
 }

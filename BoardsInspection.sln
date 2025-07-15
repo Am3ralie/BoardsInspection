@@ -1,13 +1,18 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36221.1 d17.14
+VisualStudioVersion = 17.14.36221.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoardsInspection.WebAPI", "BoardsInspection\BoardsInspection.WebAPI.csproj", "{AFD76B06-3C60-447F-8F71-D2820530B075}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoardsInspection.Core", "BoardsInspection.Core\BoardsInspection.Core.csproj", "{8BA2299A-8AAB-4174-8F14-C4BCFB4CB08C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BoardsInspection.Infrastructure", "BoardsInspection.Infrastructure\BoardsInspection.Infrastructure.csproj", "{8FF87BA7-F1FD-45C6-976B-71171843D6A4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Frontend", "Frontend", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
+	ProjectSection(SolutionItems) = preProject
+		index.html = index.html
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

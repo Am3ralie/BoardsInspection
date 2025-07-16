@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>События</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>События испытаний</h1>
+    <form id="eventForm">
+        <input type="number" id="testId" placeholder="ID испытания" required>
+        <input type="text" id="eventResult" placeholder="Результат события" required>
+        <input type="date" id="date" placeholder="Дата" required>
+        <input type="text" id="place" placeholder="Место" required>
+        <input type="hidden" id="eventId">
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>ID испытания</th><th>Результат</th><th>Дата</th><th>Место</th><th>Действия</th></tr>
+        </thead>
+        <tbody id="eventTableBody"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = 'https://localhost:7299/api/Events';
+        const form = document.getElementById('eventForm');
+        const eventIdInput = document.getElementById('eventId');
+
+        async function fetchEvents() {
+            const res = await fetch(apiUrl);
+            const events = await res.json();
+            const tbody = document.getElementById('eventTableBody');
+            tbody.innerHTML = '';
+            events.forEach(e => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${e.id}</td>
+                        <td>${e.testId}</td>
+                        <td>${e.eventResult}</td>
+                        <td>${new Date(e.date).toLocaleDateString()}</td>
+                        <td>${e.place}</td>
+                        <td>
+                            <button class="edit" onclick="editEvent(${e.id}, ${e.testId}, '${e.eventResult}', '${e.date}', '${e.place}')">✏️</button>
+                            <button class="delete" onclick="deleteEvent(${e.id})">🗑️</button>
+                        </td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = eventIdInput.value;
+            const event = {
+                testId: parseInt(document.getElementById('testId').value),
+                eventResult: document.getElementById('eventResult').value,
+                date: document.getElementById('date').value,
+                place: document.getElementById('place').value
+            };
+            if (id) {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...event, id: parseInt(id) })
+                });
+            } else {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(event)
+                });
+            }
+            form.reset();
+            await fetchEvents();
+        });
+
+        function editEvent(id, testId, eventResult, date, place) {
+            document.getElementById('eventId').value = id;
+            document.getElementById('testId').value = testId;
+            document.getElementById('eventResult').value = eventResult;
+            document.getElementById('date').value = date.split('T')[0];
+            document.getElementById('place').value = place;
+        }
+
+        async function deleteEvent(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            await fetchEvents();
+        }
+
+        fetchEvents();
+    </script>
+</body>
+</html>

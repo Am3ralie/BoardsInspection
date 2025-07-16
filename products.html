@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Платы</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Платы</h1>
+    <form id="productForm">
+        <input type="text" id="name" placeholder="Название платы" required>
+        <input type="text" id="serialNumber" placeholder="Серийный номер" required>
+        <input type="date" id="productionDate" placeholder="Дата производства" required>
+        <input type="hidden" id="productId">
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Название</th><th>Серийный номер</th><th>Дата производства</th><th>Действия</th></tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = 'https://localhost:7299/api/Products';
+        const form = document.getElementById('productForm');
+        const productIdInput = document.getElementById('productId');
+
+        async function fetchProducts() {
+            const res = await fetch(apiUrl);
+            const products = await res.json();
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = '';
+            products.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${p.id}</td>
+                        <td>${p.name}</td>
+                        <td>${p.serialNumber}</td>
+                        <td>${new Date(p.productionDate).toLocaleDateString()}</td>
+                        <td>
+                            <button class="edit" onclick="editProduct(${p.id}, '${p.name}', '${p.serialNumber}', '${p.productionDate}')">✏️</button>
+                            <button class="delete" onclick="deleteProduct(${p.id})">🗑️</button>
+                        </td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = productIdInput.value;
+            const product = {
+                name: document.getElementById('name').value,
+                serialNumber: document.getElementById('serialNumber').value,
+                productionDate: document.getElementById('productionDate').value
+            };
+            if (id) {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...product, id: parseInt(id) })
+                });
+            } else {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(product)
+                });
+            }
+            form.reset();
+            await fetchProducts();
+        });
+
+        function editProduct(id, name, serialNumber, productionDate) {
+            document.getElementById('productId').value = id;
+            document.getElementById('name').value = name;
+            document.getElementById('serialNumber').value = serialNumber;
+            document.getElementById('productionDate').value = productionDate.split('T')[0]; // Форматируем дату
+        }
+
+        async function deleteProduct(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            await fetchProducts();
+        }
+
+        fetchProducts();
+    </script>
+</body>
+</html>

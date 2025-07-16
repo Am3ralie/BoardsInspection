@@ -1,0 +1,51 @@
+﻿body {
+    font-family: "Comfortaa", sans-serif;
+    background-color: #96b6d4;
+    padding: 2rem;
+}
+
+h1 {
+    color: #333;
+}
+
+form, table {
+    margin-bottom: 2rem;
+}
+
+input {
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    width: 200px;
+}
+
+button {
+    padding: 0.5rem 1rem;
+    margin-right: 0.5rem;
+    border: none;
+    cursor: pointer;
+}
+
+.edit-btn {
+    background-color: #ffbb00;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.save-btn {
+    background-color: #4caf50;
+    color: white;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    text-align: left;
+}

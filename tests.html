@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Испытания</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Испытания</h1>
+    <form id="testForm">
+        <input type="number" id="productId" placeholder="ID платы" required>
+        <input type="text" id="type" placeholder="Тип испытания" required>
+        <input type="text" id="responsible" placeholder="Ответственный" required>
+        <input type="text" id="result" placeholder="Результат" required>
+        <input type="hidden" id="testId">
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>ID платы</th><th>Тип</th><th>Ответственный</th><th>Результат</th><th>Действия</th></tr>
+        </thead>
+        <tbody id="testTableBody"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = 'https://localhost:7299/api/Tests';
+        const form = document.getElementById('testForm');
+        const testIdInput = document.getElementById('testId');
+
+        async function fetchTests() {
+            const res = await fetch(apiUrl);
+            const tests = await res.json();
+            const tbody = document.getElementById('testTableBody');
+            tbody.innerHTML = '';
+            tests.forEach(t => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${t.id}</td>
+                        <td>${t.productId}</td>
+                        <td>${t.type}</td>
+                        <td>${t.responsible}</td>
+                        <td>${t.result}</td>
+                        <td>
+                            <button class="edit" onclick="editTest(${t.id}, ${t.productId}, '${t.type}', '${t.responsible}', '${t.result}')">✏️</button>
+                            <button class="delete" onclick="deleteTest(${t.id})">🗑️</button>
+                        </td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = testIdInput.value;
+            const test = {
+                productId: parseInt(document.getElementById('productId').value),
+                type: document.getElementById('type').value,
+                responsible: document.getElementById('responsible').value,
+                result: document.getElementById('result').value
+            };
+            if (id) {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...test, id: parseInt(id) })
+                });
+            } else {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(test)
+                });
+            }
+            form.reset();
+            await fetchTests();
+        });
+
+        function editTest(id, productId, type, responsible, result) {
+            document.getElementById('testId').value = id;
+            document.getElementById('productId').value = productId;
+            document.getElementById('type').value = type;
+            document.getElementById('responsible').value = responsible;
+            document.getElementById('result').value = result;
+        }
+
+        async function deleteTest(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            await fetchTests();
+        }
+
+        fetchTests();
+    </script>
+</body>
+</html>

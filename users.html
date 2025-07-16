@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Пользователи</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Пользователи</h1>
+    <form id="userForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Пароль" required>
+        <input type="number" id="roleId" placeholder="Роль (1=Admin, 2=User)" min="1" max="2" required>
+        <input type="hidden" id="userId">
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr><th>ID</th><th>Email</th><th>Роль</th><th>Действия</th></tr>
+        </thead>
+        <tbody id="userTableBody"></tbody>
+    </table>
+
+    <script>
+        const apiUrl = 'https://localhost:7299/api/Users';
+        const form = document.getElementById('userForm');
+        const userIdInput = document.getElementById('userId');
+
+        async function fetchUsers() {
+            const res = await fetch(apiUrl);
+            const users = await res.json();
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            users.forEach(u => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                        <td>${u.id}</td>
+                        <td>${u.email}</td>
+                        <td>${u.roleId === 1 ? 'Admin' : 'User'}</td>
+                        <td>
+                            <button class="edit" onclick="editUser(${u.id}, '${u.email}', ${u.roleId})">✏️</button>
+                            <button class="delete" onclick="deleteUser(${u.id})">🗑️</button>
+                        </td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = userIdInput.value;
+            const user = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                roleId: parseInt(document.getElementById('roleId').value)
+            };
+            if (id) {
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ...user, id: parseInt(id) })
+                });
+            } else {
+                await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                });
+            }
+            form.reset();
+            await fetchUsers();
+        });
+
+        function editUser(id, email, roleId) {
+            document.getElementById('userId').value = id;
+            document.getElementById('email').value = email;
+            document.getElementById('roleId').value = roleId;
+        }
+
+        async function deleteUser(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            await fetchUsers();
+        }
+
+        fetchUsers();
+    </script>
+</body>
+</html>

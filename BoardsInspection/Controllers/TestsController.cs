@@ -37,5 +37,25 @@ namespace BoardsInspection.WebAPI.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = test.Id }, test);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, Test test)
+        {
+            if (id != test.Id) return BadRequest();
+            _context.Entry(test).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var test = await _context.Tests.FindAsync(id);
+            if (test == null) return NotFound();
+            _context.Tests.Remove(test);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
+
 }

@@ -28,7 +28,7 @@ namespace BoardsInspection.WebAPI.Controllers
             var ev = await _context.Events.FindAsync(id);
             if (ev == null) return NotFound();
             return ev;
-        }
+        } 
 
         [HttpPost]
         public async Task<ActionResult<Event>> Create(Event ev)

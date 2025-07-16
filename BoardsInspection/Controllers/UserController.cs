@@ -22,5 +22,13 @@ namespace BoardsInspection.WebAPI.Controllers
             var users = await _context.Users.ToListAsync();
             return Ok(users);
         }
+
+        [HttpPost]
+        public async Task<ActionResult<User>> PostUser([FromBody] User user)
+        {
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetUsers), new { id = user.Id }, user);
+        }
     }
 }

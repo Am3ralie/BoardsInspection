@@ -6,22 +6,59 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Испытания</h1>
-    <form id="testForm">
-        <input type="number" id="productId" placeholder="ID платы" required>
-        <input type="text" id="type" placeholder="Тип испытания" required>
-        <input type="text" id="responsible" placeholder="Ответственный" required>
-        <input type="text" id="result" placeholder="Результат" required>
-        <input type="hidden" id="testId">
-        <button type="submit">Сохранить</button>
-    </form>
+    <nav>
+        <div>Система управления</div>
+        <div>
+            <a href="users.html">Пользователи</a>
+            <a href="products.html">Продукты</a>
+            <a href="tests.html" class="active">Тесты</a>
+            <a href="events.html">События</a>
+            <a href="#" onclick="logout()">Выйти</a>
+        </div>
+    </nav>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>ID платы</th><th>Тип</th><th>Ответственный</th><th>Результат</th><th>Действия</th></tr>
-        </thead>
-        <tbody id="testTableBody"></tbody>
-    </table>
+    <div class="container">
+        <h1>Испытания</h1>
+
+        <div class="card form-card">
+            <form id="testForm">
+                <div class="form-group">
+                    <label for="productId">ID платы</label>
+                    <input type="number" id="productId" placeholder="ID платы" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="type">Тип испытания</label>
+                    <input type="text" id="type" placeholder="Тип испытания" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="responsible">Ответственный</label>
+                    <input type="text" id="responsible" placeholder="Ответственный" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="result">Результат</label>
+                    <input type="text" id="result" placeholder="Результат" required>
+                </div>
+
+                <input type="hidden" id="testId">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>ID платы</th><th>Тип</th><th>Ответственный</th><th>Результат</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="testTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         const apiUrl = 'https://localhost:7299/api/Tests';
@@ -41,9 +78,9 @@
                         <td>${t.type}</td>
                         <td>${t.responsible}</td>
                         <td>${t.result}</td>
-                        <td>
-                            <button class="edit" onclick="editTest(${t.id}, ${t.productId}, '${t.type}', '${t.responsible}', '${t.result}')">✏️</button>
-                            <button class="delete" onclick="deleteTest(${t.id})">🗑️</button>
+                        <td class="actions">
+                            <button class="btn btn-warning" onclick="editTest(${t.id}, ${t.productId}, '${t.type}', '${t.responsible}', '${t.result}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteTest(${t.id})">🗑️</button>
                         </td>`;
                 tbody.appendChild(row);
             });
@@ -58,21 +95,26 @@
                 responsible: document.getElementById('responsible').value,
                 result: document.getElementById('result').value
             };
-            if (id) {
-                await fetch(`${apiUrl}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...test, id: parseInt(id) })
-                });
-            } else {
-                await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(test)
-                });
+
+            try {
+                if (id) {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...test, id: parseInt(id) })
+                    });
+                } else {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(test)
+                    });
+                }
+                form.reset();
+                await fetchTests();
+            } catch (error) {
+                console.error('Error:', error);
             }
-            form.reset();
-            await fetchTests();
         });
 
         function editTest(id, productId, type, responsible, result) {
@@ -84,8 +126,21 @@
         }
 
         async function deleteTest(id) {
-            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
-            await fetchTests();
+            if (confirm('Вы уверены, что хотите удалить это испытание?')) {
+                await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+                await fetchTests();
+            }
+        }
+
+        // Проверка авторизации
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
         }
 
         fetchTests();

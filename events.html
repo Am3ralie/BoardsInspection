@@ -6,22 +6,59 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>События испытаний</h1>
-    <form id="eventForm">
-        <input type="number" id="testId" placeholder="ID испытания" required>
-        <input type="text" id="eventResult" placeholder="Результат события" required>
-        <input type="date" id="date" placeholder="Дата" required>
-        <input type="text" id="place" placeholder="Место" required>
-        <input type="hidden" id="eventId">
-        <button type="submit">Сохранить</button>
-    </form>
+    <nav>
+        <div>Система управления</div>
+        <div>
+            <a href="users.html">Пользователи</a>
+            <a href="products.html">Продукты</a>
+            <a href="tests.html">Тесты</a>
+            <a href="events.html" class="active">События</a>
+            <a href="#" onclick="logout()">Выйти</a>
+        </div>
+    </nav>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>ID испытания</th><th>Результат</th><th>Дата</th><th>Место</th><th>Действия</th></tr>
-        </thead>
-        <tbody id="eventTableBody"></tbody>
-    </table>
+    <div class="container">
+        <h1>События испытаний</h1>
+
+        <div class="card form-card">
+            <form id="eventForm">
+                <div class="form-group">
+                    <label for="testId">ID испытания</label>
+                    <input type="number" id="testId" placeholder="ID испытания" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="eventResult">Результат события</label>
+                    <input type="text" id="eventResult" placeholder="Результат события" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Дата</label>
+                    <input type="date" id="date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="place">Место</label>
+                    <input type="text" id="place" placeholder="Место" required>
+                </div>
+
+                <input type="hidden" id="eventId">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>ID испытания</th><th>Результат</th><th>Дата</th><th>Место</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="eventTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         const apiUrl = 'https://localhost:7299/api/Events';
@@ -41,9 +78,9 @@
                         <td>${e.eventResult}</td>
                         <td>${new Date(e.date).toLocaleDateString()}</td>
                         <td>${e.place}</td>
-                        <td>
-                            <button class="edit" onclick="editEvent(${e.id}, ${e.testId}, '${e.eventResult}', '${e.date}', '${e.place}')">✏️</button>
-                            <button class="delete" onclick="deleteEvent(${e.id})">🗑️</button>
+                        <td class="actions">
+                            <button class="btn btn-warning" onclick="editEvent(${e.id}, ${e.testId}, '${e.eventResult}', '${e.date}', '${e.place}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteEvent(${e.id})">🗑️</button>
                         </td>`;
                 tbody.appendChild(row);
             });
@@ -58,21 +95,26 @@
                 date: document.getElementById('date').value,
                 place: document.getElementById('place').value
             };
-            if (id) {
-                await fetch(`${apiUrl}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...event, id: parseInt(id) })
-                });
-            } else {
-                await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(event)
-                });
+
+            try {
+                if (id) {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...event, id: parseInt(id) })
+                    });
+                } else {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(event)
+                    });
+                }
+                form.reset();
+                await fetchEvents();
+            } catch (error) {
+                console.error('Error:', error);
             }
-            form.reset();
-            await fetchEvents();
         });
 
         function editEvent(id, testId, eventResult, date, place) {
@@ -84,8 +126,21 @@
         }
 
         async function deleteEvent(id) {
-            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
-            await fetchEvents();
+            if (confirm('Вы уверены, что хотите удалить это событие?')) {
+                await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+                await fetchEvents();
+            }
+        }
+
+        // Проверка авторизации
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
         }
 
         fetchEvents();

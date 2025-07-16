@@ -6,21 +6,58 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Пользователи</h1>
-    <form id="userForm">
-        <input type="email" id="email" placeholder="Email" required>
-        <input type="password" id="password" placeholder="Пароль" required>
-        <input type="number" id="roleId" placeholder="Роль (1=Admin, 2=User)" min="1" max="2" required>
-        <input type="hidden" id="userId">
-        <button type="submit">Сохранить</button>
-    </form>
+    <nav>
+        <div>Система управления</div>
+        <div>
+            <a href="users.html" class="active">Пользователи</a>
+            <a href="products.html">Продукты</a>
+            <a href="tests.html">Тесты</a>
+            <a href="events.html">События</a>
+            <a href="#" onclick="logout()">Выйти</a>
+        </div>
+    </nav>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>Email</th><th>Роль</th><th>Действия</th></tr>
-        </thead>
-        <tbody id="userTableBody"></tbody>
-    </table>
+    <div class="container">
+        <h1>Пользователи</h1>
+
+        <div class="card form-card">
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input type="password" id="password" placeholder="Пароль" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="roleId">Роль</label>
+                    <select id="roleId" required>
+                        <option value="">Выберите роль</option>
+                        <option value="1">Администратор</option>
+                        <option value="2">Пользователь</option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="userId">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Email</th><th>Роль</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         const apiUrl = 'https://localhost:7299/api/Users';
@@ -38,9 +75,9 @@
                         <td>${u.id}</td>
                         <td>${u.email}</td>
                         <td>${u.roleId === 1 ? 'Admin' : 'User'}</td>
-                        <td>
-                            <button class="edit" onclick="editUser(${u.id}, '${u.email}', ${u.roleId})">✏️</button>
-                            <button class="delete" onclick="deleteUser(${u.id})">🗑️</button>
+                        <td class="actions">
+                            <button class="btn btn-warning" onclick="editUser(${u.id}, '${u.email}', ${u.roleId})">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteUser(${u.id})">🗑️</button>
                         </td>`;
                 tbody.appendChild(row);
             });
@@ -54,21 +91,26 @@
                 password: document.getElementById('password').value,
                 roleId: parseInt(document.getElementById('roleId').value)
             };
-            if (id) {
-                await fetch(`${apiUrl}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...user, id: parseInt(id) })
-                });
-            } else {
-                await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(user)
-                });
+
+            try {
+                if (id) {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...user, id: parseInt(id) })
+                    });
+                } else {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(user)
+                    });
+                }
+                form.reset();
+                await fetchUsers();
+            } catch (error) {
+                console.error('Error:', error);
             }
-            form.reset();
-            await fetchUsers();
         });
 
         function editUser(id, email, roleId) {
@@ -78,8 +120,26 @@
         }
 
         async function deleteUser(id) {
-            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
-            await fetchUsers();
+            if (confirm('Вы уверены, что хотите удалить этого пользователя?')) {
+                await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+                await fetchUsers();
+            }
+        }
+
+        // Проверка авторизации
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+
+        if (user.roleId !== 1) {
+            alert('У вас нет доступа к этой странице.');
+            window.location.href = 'products.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
         }
 
         fetchUsers();

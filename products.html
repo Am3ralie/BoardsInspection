@@ -6,21 +6,54 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Платы</h1>
-    <form id="productForm">
-        <input type="text" id="name" placeholder="Название платы" required>
-        <input type="text" id="serialNumber" placeholder="Серийный номер" required>
-        <input type="date" id="productionDate" placeholder="Дата производства" required>
-        <input type="hidden" id="productId">
-        <button type="submit">Сохранить</button>
-    </form>
+    <nav>
+        <div>Система управления</div>
+        <div>
+            <a href="users.html">Пользователи</a>
+            <a href="products.html" class="active">Продукты</a>
+            <a href="tests.html">Тесты</a>
+            <a href="events.html">События</a>
+            <a href="#" onclick="logout()">Выйти</a>
+        </div>
+    </nav>
 
-    <table>
-        <thead>
-            <tr><th>ID</th><th>Название</th><th>Серийный номер</th><th>Дата производства</th><th>Действия</th></tr>
-        </thead>
-        <tbody id="productTableBody"></tbody>
-    </table>
+    <div class="container">
+        <h1>Платы</h1>
+
+        <div class="card form-card">
+            <form id="productForm">
+                <div class="form-group">
+                    <label for="name">Название платы</label>
+                    <input type="text" id="name" placeholder="Название платы" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="serialNumber">Серийный номер</label>
+                    <input type="text" id="serialNumber" placeholder="Серийный номер" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productionDate">Дата производства</label>
+                    <input type="date" id="productionDate" required>
+                </div>
+
+                <input type="hidden" id="productId">
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>ID</th><th>Название</th><th>Серийный номер</th><th>Дата производства</th><th>Действия</th></tr>
+                </thead>
+                <tbody id="productTableBody"></tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
         const apiUrl = 'https://localhost:7299/api/Products';
@@ -39,9 +72,9 @@
                         <td>${p.name}</td>
                         <td>${p.serialNumber}</td>
                         <td>${new Date(p.productionDate).toLocaleDateString()}</td>
-                        <td>
-                            <button class="edit" onclick="editProduct(${p.id}, '${p.name}', '${p.serialNumber}', '${p.productionDate}')">✏️</button>
-                            <button class="delete" onclick="deleteProduct(${p.id})">🗑️</button>
+                        <td class="actions">
+                            <button class="btn btn-warning" onclick="editProduct(${p.id}, '${p.name}', '${p.serialNumber}', '${p.productionDate}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteProduct(${p.id})">🗑️</button>
                         </td>`;
                 tbody.appendChild(row);
             });
@@ -55,33 +88,51 @@
                 serialNumber: document.getElementById('serialNumber').value,
                 productionDate: document.getElementById('productionDate').value
             };
-            if (id) {
-                await fetch(`${apiUrl}/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ...product, id: parseInt(id) })
-                });
-            } else {
-                await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(product)
-                });
+
+            try {
+                if (id) {
+                    await fetch(`${apiUrl}/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...product, id: parseInt(id) })
+                    });
+                } else {
+                    await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(product)
+                    });
+                }
+                form.reset();
+                await fetchProducts();
+            } catch (error) {
+                console.error('Error:', error);
             }
-            form.reset();
-            await fetchProducts();
         });
 
         function editProduct(id, name, serialNumber, productionDate) {
             document.getElementById('productId').value = id;
             document.getElementById('name').value = name;
             document.getElementById('serialNumber').value = serialNumber;
-            document.getElementById('productionDate').value = productionDate.split('T')[0]; // Форматируем дату
+            document.getElementById('productionDate').value = productionDate.split('T')[0];
         }
 
         async function deleteProduct(id) {
-            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
-            await fetchProducts();
+            if (confirm('Вы уверены, что хотите удалить этот продукт?')) {
+                await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+                await fetchProducts();
+            }
+        }
+
+        // Проверка авторизации
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
         }
 
         fetchProducts();
